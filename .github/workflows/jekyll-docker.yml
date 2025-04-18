@@ -1,0 +1,55 @@
+name: Update Ngrok Address
+
+on:
+  # 可以根据需求设置触发条件，这里设置为每天定时触发
+  schedule:
+    - cron: '0 0 * * *' 
+
+jobs:
+  update-address:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Install ngrok
+        run: |
+          # 下载 ngrok
+          wget -qO- https://bin.equinox.io/c/4VmDzA7iaHb/ngrok-stable-linux-amd64.zip | unzip -
+          # 添加执行权限
+          chmod +x ngrok
+
+      - name: Start ngrok
+        id: start-ngrok
+        run: |
+          # 启动 ngrok 隧道，这里假设本地服务端口为 8080，你可以根据实际情况修改
+          ./ngrok http 37799 &
+          # 等待 ngrok 启动
+          sleep 5
+
+      - name: Get ngrok address
+        id: get-address
+        run: |
+          # 通过 ngrok 的本地 API 获取最新的公网地址
+          NGROK_URL=$(curl -s http://localhost:4040/api/tunnels | jq -r '.tunnels[0].public_url')
+          echo "ngrok_url=$NGROK_URL" >> $GITHUB_OUTPUT
+
+      - name: Update HTML file
+        run: |
+          # 假设 HTML 文件名为 dashboard-nav.html，你可以根据实际情况修改
+          sed -i "s|https:///f026-124-127-67-231.ngrok-free.app|${{ steps.get-address.outputs.ngrok_url }}|g" index.html
+
+      - name: Commit and push changes
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add .
+          if git diff --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Update ngrok address to ${{ steps.get-address.outputs.ngrok_url }}"
+            git push
+          fi
