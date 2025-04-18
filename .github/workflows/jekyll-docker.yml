@@ -1,33 +1,32 @@
 name: Update Ngrok Address in index.html
 
 on:
-  # 这里设置为手动触发，你也可以根据需求设置为定时触发
+  # 手动触发
   workflow_dispatch:
+  # 定时触发，这里设置为每小时触发一次，你可以根据需要调整
+  schedule:
+    - cron: '0 * * * *'
 
 jobs:
   update-address:
     runs-on: windows-latest
-
+    permissions:
+      contents: write
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Extract ngrok
-        run: |
-          Expand-Archive -Path ngrok-v3-stable-windows-amd64.zip -DestinationPath .
-          .\ngrok.exe authtoken ${{ secrets.NGROK_TOKEN }}
-
-      - name: Start ngrok
-        id: start-ngrok
-        run: |
-          Start-Process -FilePath .\ngrok.exe -ArgumentList "http 37799"
-          Start-Sleep -Seconds 5
-
       - name: Get ngrok address
         id: get-address
         run: |
-          $NGROK_URL = (Invoke-RestMethod -Uri http://localhost:4040/api/tunnels).tunnels[0].public_url
-          echo "ngrok_url=$NGROK_URL" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+          try {
+            $NGROK_URL = (Invoke-RestMethod -Uri http://localhost:4040/api/tunnels).tunnels[0].public_url
+            echo "ngrok_url=$NGROK_URL" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+          }
+          catch {
+            Write-Error "Failed to get ngrok address: $_"
+            exit 1
+          }
 
       - name: Update index.html
         run: |
