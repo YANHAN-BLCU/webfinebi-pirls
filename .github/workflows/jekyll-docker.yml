@@ -20,7 +20,7 @@ jobs:
       - name: Start ngrok
         id: start-ngrok
         run: |
-          # 假设本地服务端口为 8080，你可以根据实际情况修改
+          # 假设本地服务端口为 37799，你可以根据实际情况修改
           ./ngrok http 37799 &
           sleep 5
 
@@ -32,12 +32,12 @@ jobs:
 
       - name: Update index.html
         run: |
-          # 假设 index.html 中有旧的 ngrok 地址占位符，这里用 https://old-ngrok-url 表示
-          sed -i "s|https://old-ngrok-url|${{ steps.get-address.outputs.ngrok_url }}|g" index.html
+          # 替换 index.html 中的占位符
+          sed -i "s|https://{{NGROK_ADDRESS}}|${{ steps.get-address.outputs.ngrok_url }}|g" index.html
 
       - name: Commit and push changes
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ngroktokengets: ${{ secrets.ngroktokengets }}
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
@@ -47,4 +47,4 @@ jobs:
           else
             git commit -m "Update ngrok address in index.html to ${{ steps.get-address.outputs.ngrok_url }}"
             git push
-          fi
+          fi    
