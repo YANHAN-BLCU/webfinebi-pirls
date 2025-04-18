@@ -14,8 +14,10 @@ jobs:
 
       - name: Install ngrok
         run: |
-          wget -qO- https://bin.equinox.io/c/4VmDzA7iaHb/ngrok-stable-linux-amd64.zip | unzip -
+          wget -q -O ngrok.zip https://bin.equinox.io/c/4VmDzA7iaHb/ngrok-stable-linux-amd64.zip
+          unzip -q ngrok.zip
           chmod +x ngrok
+          ./ngrok authtoken ${{ secrets.ngrok读取 }}
 
       - name: Start ngrok
         id: start-ngrok
@@ -37,7 +39,7 @@ jobs:
 
       - name: Commit and push changes
         env:
-          ngroktokengets: ${{ secrets.ngroktokengets }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
