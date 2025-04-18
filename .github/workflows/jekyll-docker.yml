@@ -1,7 +1,6 @@
 name: Update Ngrok Address in index.html
 
 on:
-  # 这里设置为手动触发，你也可以根据需求设置为定时触发
   workflow_dispatch:
 
 jobs:
@@ -17,13 +16,12 @@ jobs:
           wget -q -O ngrok.zip https://bin.equinox.io/c/4VmDzA7iaHb/ngrok-stable-linux-amd64.zip
           unzip -q ngrok.zip
           chmod +x ngrok
-          ./ngrok authtoken ${{ secrets.ngrok读取 }}
+          ./ngrok authtoken ${{ secrets.NGROK_TOKEN }}  
 
       - name: Start ngrok
         id: start-ngrok
         run: |
-          # 假设本地服务端口为 37799，你可以根据实际情况修改
-          ./ngrok http 37799 &
+          ./ngrok http 37799 &  # 替换为你的实际端口
           sleep 5
 
       - name: Get ngrok address
@@ -34,12 +32,11 @@ jobs:
 
       - name: Update index.html
         run: |
-          # 替换 index.html 中的占位符
           sed -i "s|https://{{NGROK_ADDRESS}}|${{ steps.get-address.outputs.ngrok_url }}|g" index.html
 
       - name: Commit and push changes
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # 无需修改，保持默认
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
@@ -47,6 +44,6 @@ jobs:
           if git diff --quiet; then
             echo "No changes to commit"
           else
-            git commit -m "Update ngrok address in index.html to ${{ steps.get-address.outputs.ngrok_url }}"
+            git commit -m "Update ngrok address to ${{ steps.get-address.outputs.ngrok_url }}"
             git push
-          fi    
+          fi
