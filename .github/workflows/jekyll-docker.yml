@@ -6,45 +6,34 @@ on:
 
 jobs:
   update-address:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Install ngrok
+      - name: Extract ngrok
         run: |
-          wget -q -O ngrok.zip https://bin.equinox.io/c/4VmDzA7iaHb/ngrok-stable-linux-amd64.zip
-          unzip -q ngrok.zip
-          chmod +x ngrok
-          ./ngrok authtoken ${{ secrets.NGROK_TOKEN }}
+          Expand-Archive -Path ngrok-v3-stable-windows-amd64.zip -DestinationPath .
+          .\ngrok.exe authtoken ${{ secrets.NGROK_TOKEN }}
 
       - name: Start ngrok
         id: start-ngrok
         run: |
-          ./ngrok http 37799 &
-          sleep 5
-          # 检查 ngrok 是否正常工作
-          if curl -s http://localhost:4040/api/tunnels > /dev/null; then
-            echo "ngrok 正常工作"
-          else
-            echo "ngrok 启动失败"
-          fi
+          Start-Process -FilePath .\ngrok.exe -ArgumentList "http 37799"
+          Start-Sleep -Seconds 5
 
       - name: Get ngrok address
         id: get-address
         run: |
-          NGROK_URL=$(curl -s http://localhost:4040/api/tunnels | jq -r '.tunnels[0].public_url')
-          echo "ngrok_url=$NGROK_URL" >> $GITHUB_OUTPUT
+          $NGROK_URL = (Invoke-RestMethod -Uri http://localhost:4040/api/tunnels).tunnels[0].public_url
+          echo "ngrok_url=$NGROK_URL" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
 
       - name: Update index.html
         run: |
-          if [ -f index.html ]; then
-            echo "index.html 文件存在"
-            sed -i "s|https://{{NGROK_ADDRESS}}|${{ steps.get-address.outputs.ngrok_url }}|g" index.html
-          else
-            echo "index.html 文件不存在"
-          fi
+          $content = Get-Content -Path index.html
+          $newContent = $content -replace "https://{{NGROK_ADDRESS}}", "${{ steps.get-address.outputs.ngrok_url }}"
+          $newContent | Set-Content -Path index.html
 
       - name: Commit and push changes
         env:
@@ -53,11 +42,9 @@ jobs:
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git add index.html
-          if git diff --quiet; then
-            echo "文件没有变化，跳过提交"
-            # 输出文件内容，用于调试
-            cat index.html
-          else
+          if (-not (git diff --quiet)) {
             git commit -m "Update ngrok address in index.html to ${{ steps.get-address.outputs.ngrok_url }}"
             git push
-          fi    
+          } else {
+            echo "No changes to commit"
+          }    
