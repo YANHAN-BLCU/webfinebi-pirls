@@ -4,8 +4,6 @@ on:
   # 手动触发
   workflow_dispatch:
   # 定时触发，这里设置为每小时触发一次，你可以根据需要调整
-  schedule:
-    - cron: '0 * * * *'
 
 jobs:
   update-address:
