@@ -1,6 +1,7 @@
 name: Update Ngrok Address in index.html
 
 on:
+  # 这里设置为手动触发，你也可以根据需求设置为定时触发
   workflow_dispatch:
 
 jobs:
@@ -16,13 +17,19 @@ jobs:
           wget -q -O ngrok.zip https://bin.equinox.io/c/4VmDzA7iaHb/ngrok-stable-linux-amd64.zip
           unzip -q ngrok.zip
           chmod +x ngrok
-          ./ngrok authtoken ${{ secrets.NGROK_TOKEN }}  
+          ./ngrok authtoken ${{ secrets.NGROK_TOKEN }}
 
       - name: Start ngrok
         id: start-ngrok
         run: |
-          ./ngrok http 37799 &  # 替换为你的实际端口
+          ./ngrok http 37799 &
           sleep 5
+          # 检查 ngrok 是否正常工作
+          if curl -s http://localhost:4040/api/tunnels > /dev/null; then
+            echo "ngrok 正常工作"
+          else
+            echo "ngrok 启动失败"
+          fi
 
       - name: Get ngrok address
         id: get-address
@@ -32,18 +39,25 @@ jobs:
 
       - name: Update index.html
         run: |
-          sed -i "s|https://{{NGROK_ADDRESS}}|${{ steps.get-address.outputs.ngrok_url }}|g" index.html
+          if [ -f index.html ]; then
+            echo "index.html 文件存在"
+            sed -i "s|https://{{NGROK_ADDRESS}}|${{ steps.get-address.outputs.ngrok_url }}|g" index.html
+          else
+            echo "index.html 文件不存在"
+          fi
 
       - name: Commit and push changes
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # 无需修改，保持默认
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git add index.html
           if git diff --quiet; then
-            echo "No changes to commit"
+            echo "文件没有变化，跳过提交"
+            # 输出文件内容，用于调试
+            cat index.html
           else
-            git commit -m "Update ngrok address to ${{ steps.get-address.outputs.ngrok_url }}"
+            git commit -m "Update ngrok address in index.html to ${{ steps.get-address.outputs.ngrok_url }}"
             git push
-          fi
+          fi    
