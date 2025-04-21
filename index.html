@@ -82,13 +82,13 @@
 <body>
     <canvas id="matrix"></canvas>
     <h1>仪表板列表</h1>
-    <a class="dashboard-link" href="https://192.168.43.51:37799/webroot/decision/link/qY9U" target="_blank">仪表板 1</a>
-    <a class="dashboard-link" href="https://192.168.43.51:37799/webroot/decision/link/Cc4h" target="_blank">仪表板 2</a>
-    <a class="dashboard-link" href="https://192.168.43.51:37799/webroot/decision/link/xCJ9" target="_blank">仪表板 3</a>
-    <a class="dashboard-link" href="https://192.168.43.51:37799/webroot/decision/link/0qRb" target="_blank">仪表板 4</a>
-    <a class="dashboard-link" href="https://192.168.43.51:37799/webroot/decision/link/ViE1" target="_blank">仪表板 5</a>
-    <a class="dashboard-link" href="https://192.168.43.51:37799/webroot/decision/link/XyGT" target="_blank">仪表板 6</a>
-    <a class="dashboard-link" href="https://192.168.43.51:37799/webroot/decision/link/qygY" target="_blank">仪表板 7</a>
+    <a class="dashboard-link" href="http://192.168.43.51:37799/webroot/decision/link/qY9U" target="_blank">学生背景数据相关</a>
+    <a class="dashboard-link" href="http://192.168.43.51:37799/webroot/decision/link/0qRb" target="_blank">教师背景数据相关（1）</a>
+    <a class="dashboard-link" href="http://192.168.43.51:37799/webroot/decision/link/Cc4h" target="_blank">教师背景数据相关（2）</a>
+    <a class="dashboard-link" href="http://192.168.43.51:37799/webroot/decision/link/xCJ9" target="_blank">家庭背景数据相关</a>
+    <a class="dashboard-link" href="http://192.168.43.51:37799/webroot/decision/link/ViE1" target="_blank">学校背景数据相关</a>
+    <a class="dashboard-link" href="http://192.168.43.51:37799/webroot/decision/link/XyGT" target="_blank">学生阅读素养相关（a5）</a>
+    <a class="dashboard-link" href="http://192.168.43.51:37799/webroot/decision/link/qygY" target="_blank">学生阅读素养相关</a>
 
     <script>
         const canvas = document.getElementById('matrix');
@@ -98,18 +98,25 @@
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
 
-        const katakana = 'PIRLS';
-        const latin = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-        const nums = '0123456789';
-
-        const alphabet = katakana + latin + nums;
+        // 定义国家名列表
+        const countries = [
+            "中国", "美国", "俄罗斯", "英国", "法国", "德国", "日本", "印度", "巴西", "加拿大",
+            "澳大利亚", "意大利", "韩国", "西班牙", "墨西哥", "荷兰", "瑞士", "瑞典", "比利时", "挪威"
+        ];
 
         const fontSize = 16;
-        const columns = canvas.width / fontSize;
+        // 降低字符密度，通过增加列间距，减少列的数量
+        const columnSpacing = 2; 
+        const columns = Math.floor(canvas.width / (fontSize * columnSpacing));
 
+        // 存储每个列下一个国家名开始下落的行号
         const drops = [];
+        // 控制每个列国家名重新开始下落的频率
+        const restartThreshold = 0.99; 
+
         for (let x = 0; x < columns; x++) {
-            drops[x] = 1;
+            // 初始时让第一个国家名在随机行开始下落
+            drops[x] = Math.floor(Math.random() * 20); 
         }
 
         function draw() {
@@ -120,13 +127,18 @@
             ctx.font = fontSize + 'px monospace';
 
             for (let i = 0; i < drops.length; i++) {
-                const text = alphabet.charAt(Math.floor(Math.random() * alphabet.length));
-                ctx.fillText(text, i * fontSize, drops[i] * fontSize);
-
-                if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
-                    drops[i] = 0;
+                const country = countries[Math.floor(Math.random() * countries.length)];
+                if (drops[i] * fontSize < canvas.height) {
+                    ctx.fillText(country, i * fontSize * columnSpacing, drops[i] * fontSize);
                 }
-                drops[i]++;
+
+                // 降低下落速度，减小每次下落的步长
+                drops[i] += Math.max(1, Math.floor(country.length / 4)); 
+
+                if (drops[i] * fontSize > canvas.height && Math.random() > restartThreshold) {
+                    // 让下一个国家名在随机的较靠上的位置开始下落
+                    drops[i] = Math.floor(Math.random() * 10); 
+                }
             }
         }
 
