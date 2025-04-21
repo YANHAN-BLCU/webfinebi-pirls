@@ -1,31 +1,137 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <title>仪表板导航</title>
     <style>
-        body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }
+        /* 全局样式 */
+        body {
+            font-family: 'Orbitron', sans-serif;
+            text-align: center;
+            padding: 20px;
+            color: #00ffea;
+            margin: 0;
+            min-height: 100vh;
+            overflow: hidden; /* 防止滚动条出现 */
+        }
+
+        h1 {
+            font-size: 48px;
+            text-shadow: 0 0 10px #00ffea, 0 0 20px #00ffea, 0 0 30px #00ffea;
+            margin-bottom: 50px;
+            position: relative;
+            z-index: 1; /* 确保标题显示在代码雨之上 */
+        }
+
         .dashboard-link {
             display: block;
-            margin: 10px auto;
-            padding: 15px 30px;
-            background-color: #4CAF50;
-            color: white;
+            margin: 20px auto;
+            padding: 20px 40px;
+            background: rgba(0, 255, 234, 0.1);
+            color: #00ffea;
             text-align: center;
             text-decoration: none;
-            border-radius: 5px;
-            width: 300px;
-            font-size: 18px;
+            border-radius: 50px;
+            width: 350px;
+            font-size: 20px;
+            border: 2px solid #00ffea;
+            box-shadow: 0 0 10px #00ffea;
+            transition: all 0.3s ease;
+            position: relative;
+            z-index: 1; /* 确保按钮显示在代码雨之上 */
+            overflow: hidden;
+        }
+
+        .dashboard-link:hover {
+            background: #00ffea;
+            color: #0f0c29;
+            transform: scale(1.05);
+            box-shadow: 0 0 20px #00ffea, 0 0 40px #00ffea;
+        }
+
+        .dashboard-link::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.1);
+            transform: skewX(-30deg);
+            transition: left 0.5s;
+        }
+
+        .dashboard-link:hover::before {
+            left: 100%;
+        }
+
+        /* 代码雨画布样式 */
+        #matrix {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0; /* 确保代码雨在底层 */
         }
     </style>
+    <!-- 引入科技感字体 -->
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
 </head>
+
 <body>
+    <canvas id="matrix"></canvas>
     <h1>仪表板列表</h1>
-    <a class="dashboard-link" href="https://69c3-172-190-111-100.ngrok-free.app/webroot/decision/link/qY9U" target="_blank">仪表板 1</a>
-    <a class="dashboard-link" href="https://69c3-172-190-111-100.ngrok-free.app/webroot/decision/link/Cc4h" target="_blank">仪表板 2</a>
-    <a class="dashboard-link" href="https://69c3-172-190-111-100.ngrok-free.app/webroot/decision/link/xCJ9" target="_blank">仪表板 3</a>
-    <a class="dashboard-link" href="https://69c3-172-190-111-100.ngrok-free.app/webroot/decision/link/0qRb" target="_blank">仪表板 4</a>
-    <a class="dashboard-link" href="https://69c3-172-190-111-100.ngrok-free.app/webroot/decision/link/ViE1" target="_blank">仪表板 5</a>
-    <a class="dashboard-link" href="https://69c3-172-190-111-100.ngrok-free.app/webroot/decision/link/XyGT" target="_blank">仪表板 6</a>
-    <a class="dashboard-link" href="https://69c3-172-190-111-100.ngrok-free.app/webroot/decision/link/qygY" target="_blank">仪表板 7</a>
+    <a class="dashboard-link" href="https://192.168.43.51:37799/webroot/decision/link/qY9U" target="_blank">仪表板 1</a>
+    <a class="dashboard-link" href="https://192.168.43.51:37799/webroot/decision/link/Cc4h" target="_blank">仪表板 2</a>
+    <a class="dashboard-link" href="https://192.168.43.51:37799/webroot/decision/link/xCJ9" target="_blank">仪表板 3</a>
+    <a class="dashboard-link" href="https://192.168.43.51:37799/webroot/decision/link/0qRb" target="_blank">仪表板 4</a>
+    <a class="dashboard-link" href="https://192.168.43.51:37799/webroot/decision/link/ViE1" target="_blank">仪表板 5</a>
+    <a class="dashboard-link" href="https://192.168.43.51:37799/webroot/decision/link/XyGT" target="_blank">仪表板 6</a>
+    <a class="dashboard-link" href="https://192.168.43.51:37799/webroot/decision/link/qygY" target="_blank">仪表板 7</a>
+
+    <script>
+        const canvas = document.getElementById('matrix');
+        const ctx = canvas.getContext('2d');
+
+        // 设置画布大小
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        const katakana = 'PIRLS';
+        const latin = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        const nums = '0123456789';
+
+        const alphabet = katakana + latin + nums;
+
+        const fontSize = 16;
+        const columns = canvas.width / fontSize;
+
+        const drops = [];
+        for (let x = 0; x < columns; x++) {
+            drops[x] = 1;
+        }
+
+        function draw() {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            ctx.fillStyle = '#0F0';
+            ctx.font = fontSize + 'px monospace';
+
+            for (let i = 0; i < drops.length; i++) {
+                const text = alphabet.charAt(Math.floor(Math.random() * alphabet.length));
+                ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+
+                if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+                    drops[i] = 0;
+                }
+                drops[i]++;
+            }
+        }
+
+        setInterval(draw, 33);
+    </script>
 </body>
-</html>    
+
+</html>
